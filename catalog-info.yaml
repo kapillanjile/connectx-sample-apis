@@ -1,0 +1,89 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: connectx-sample-api
+  title: ConnectX Sample API
+  description: Sample API deployed via ArgoCD and managed by Gravitee Gateway with Rate Limiting and API Key enforcement
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+  links:
+    - url: https://gravitee.au.connectxconsultingptyltd.cftenant.com
+      title: Gravitee API Manager
+      icon: dashboard
+    - url: https://argocd.au.connectxconsultingptyltd.cftenant.com
+      title: ArgoCD Deployment
+      icon: cloud
+    - url: https://gravitee-gw.au.connectxconsultingptyltd.cftenant.com/sample-api
+      title: API Gateway Endpoint
+      icon: api
+  tags:
+    - rest
+    - managed
+    - argocd
+    - gravitee
+spec:
+  type: service
+  lifecycle: production
+  owner: connectx
+  providesApis:
+    - connectx-sample-api-definition
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: connectx-sample-api-definition
+  title: ConnectX Sample API
+  description: REST API returning service health and status information
+  tags:
+    - rest
+    - json
+spec:
+  type: openapi
+  lifecycle: production
+  owner: connectx
+  definition: |
+    openapi: 3.0.0
+    info:
+      title: ConnectX Sample API
+      version: 1.0.0
+      description: Sample API deployed via ArgoCD and managed by Gravitee
+    servers:
+      - url: https://gravitee-gw.au.connectxconsultingptyltd.cftenant.com
+        description: Production Gateway
+    paths:
+      /sample-api:
+        get:
+          summary: Get service health
+          operationId: getHealth
+          security:
+            - apiKey: []
+          responses:
+            '200':
+              description: Successful response
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: healthy
+                      service:
+                        type: string
+                        example: connectx-sample-api
+                      version:
+                        type: string
+                        example: 1.0.0
+                      message:
+                        type: string
+                        example: Hello from ConnectX OSS API Platform
+            '401':
+              description: Unauthorized - Missing or invalid API key
+            '429':
+              description: Too Many Requests - Rate limit exceeded
+    components:
+      securitySchemes:
+        apiKey:
+          type: apiKey
+          in: header
+          name: X-Gravitee-Api-Key
