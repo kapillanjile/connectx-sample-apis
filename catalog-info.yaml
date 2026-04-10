@@ -1,86 +1,294 @@
 apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: connectx-platform
+  title: ConnectX API Platform
+  description: Enterprise API Management Platform - OSS alternative to MuleSoft Anypoint
+spec:
+  owner: connectx
+---
+apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: connectx-sample-api
-  title: ConnectX Sample API
-  description: Sample API deployed via ArgoCD and managed by Gravitee Gateway with Rate Limiting and API Key enforcement
-  annotations:
-    backstage.io/techdocs-ref: dir:.
-  links:
-    - url: https://gravitee.au.connectxconsultingptyltd.cftenant.com
-      title: Gravitee API Manager
-      icon: dashboard
-    - url: https://argocd.au.connectxconsultingptyltd.cftenant.com
-      title: ArgoCD Deployment
-      icon: cloud
-    - url: https://gravitee-gw.au.connectxconsultingptyltd.cftenant.com/sample-api
-      title: API Gateway Endpoint
-      icon: api
+  title: Health Check API
+  description: Platform health and status API
   tags:
     - rest
-    - managed
-    - argocd
-    - gravitee
+    - health
+  links:
+    - url: https://gravitee.au.connectxconsultingptyltd.cftenant.com
+      title: Gravitee Manager
+    - url: https://argocd.au.connectxconsultingptyltd.cftenant.com
+      title: ArgoCD
 spec:
   type: service
   lifecycle: production
   owner: connectx
+  system: connectx-platform
   providesApis:
-    - connectx-sample-api-definition
+    - sample-api-definition
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: customer-api
+  title: Customer API
+  description: CRM customer data service providing customer profiles, tiers, and industry classification
+  tags:
+    - rest
+    - crm
+    - customers
+  links:
+    - url: https://gravitee-gw.au.connectxconsultingptyltd.cftenant.com/customer-api
+      title: Gateway Endpoint
+spec:
+  type: service
+  lifecycle: production
+  owner: connectx
+  system: connectx-platform
+  providesApis:
+    - customer-api-definition
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: order-api
+  title: Order Management API
+  description: Order processing and fulfillment tracking service
+  tags:
+    - rest
+    - orders
+    - commerce
+  links:
+    - url: https://gravitee-gw.au.connectxconsultingptyltd.cftenant.com/order-api
+      title: Gateway Endpoint
+spec:
+  type: service
+  lifecycle: production
+  owner: connectx
+  system: connectx-platform
+  providesApis:
+    - order-api-definition
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: notification-api
+  title: Notification API
+  description: Multi-channel notification service supporting email, webhook, and SMS delivery
+  tags:
+    - rest
+    - notifications
+    - messaging
+  links:
+    - url: https://gravitee-gw.au.connectxconsultingptyltd.cftenant.com/notification-api
+      title: Gateway Endpoint
+spec:
+  type: service
+  lifecycle: production
+  owner: connectx
+  system: connectx-platform
+  providesApis:
+    - notification-api-definition
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API
 metadata:
-  name: connectx-sample-api-definition
-  title: ConnectX Sample API
-  description: REST API returning service health and status information
-  tags:
-    - rest
-    - json
+  name: sample-api-definition
+  title: Health Check API
+  description: Platform health endpoint
 spec:
   type: openapi
   lifecycle: production
   owner: connectx
+  system: connectx-platform
   definition: |
     openapi: 3.0.0
     info:
-      title: ConnectX Sample API
+      title: Health Check API
       version: 1.0.0
-      description: Sample API deployed via ArgoCD and managed by Gravitee
     servers:
       - url: https://gravitee-gw.au.connectxconsultingptyltd.cftenant.com
-        description: Production Gateway
     paths:
       /sample-api:
         get:
-          summary: Get service health
-          operationId: getHealth
+          summary: Get platform health
           security:
             - apiKey: []
           responses:
             '200':
-              description: Successful response
+              description: OK
+            '401':
+              description: Unauthorized
+            '429':
+              description: Rate limited
+    components:
+      securitySchemes:
+        apiKey:
+          type: apiKey
+          in: header
+          name: X-Gravitee-Api-Key
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: customer-api-definition
+  title: Customer API
+  description: Customer data service
+spec:
+  type: openapi
+  lifecycle: production
+  owner: connectx
+  system: connectx-platform
+  definition: |
+    openapi: 3.0.0
+    info:
+      title: Customer API
+      version: 1.0.0
+    servers:
+      - url: https://gravitee-gw.au.connectxconsultingptyltd.cftenant.com
+    paths:
+      /customer-api:
+        get:
+          summary: List customers
+          security:
+            - apiKey: []
+          responses:
+            '200':
+              description: OK
               content:
                 application/json:
                   schema:
                     type: object
                     properties:
-                      status:
-                        type: string
-                        example: healthy
-                      service:
-                        type: string
-                        example: connectx-sample-api
-                      version:
-                        type: string
-                        example: 1.0.0
-                      message:
-                        type: string
-                        example: Hello from ConnectX OSS API Platform
-            '401':
-              description: Unauthorized - Missing or invalid API key
-            '429':
-              description: Too Many Requests - Rate limit exceeded
+                      customers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            name:
+                              type: string
+                            industry:
+                              type: string
+                            tier:
+                              type: string
+                      total:
+                        type: integer
+    components:
+      securitySchemes:
+        apiKey:
+          type: apiKey
+          in: header
+          name: X-Gravitee-Api-Key
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: order-api-definition
+  title: Order Management API
+  description: Order processing service
+spec:
+  type: openapi
+  lifecycle: production
+  owner: connectx
+  system: connectx-platform
+  definition: |
+    openapi: 3.0.0
+    info:
+      title: Order Management API
+      version: 1.0.0
+    servers:
+      - url: https://gravitee-gw.au.connectxconsultingptyltd.cftenant.com
+    paths:
+      /order-api:
+        get:
+          summary: List orders
+          security:
+            - apiKey: []
+          responses:
+            '200':
+              description: OK
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      orders:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            customer:
+                              type: string
+                            product:
+                              type: string
+                            status:
+                              type: string
+                            amount:
+                              type: number
+                      total:
+                        type: integer
+    components:
+      securitySchemes:
+        apiKey:
+          type: apiKey
+          in: header
+          name: X-Gravitee-Api-Key
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: notification-api-definition
+  title: Notification API
+  description: Multi-channel notification service
+spec:
+  type: openapi
+  lifecycle: production
+  owner: connectx
+  system: connectx-platform
+  definition: |
+    openapi: 3.0.0
+    info:
+      title: Notification API
+      version: 1.0.0
+    servers:
+      - url: https://gravitee-gw.au.connectxconsultingptyltd.cftenant.com
+    paths:
+      /notification-api:
+        get:
+          summary: List notifications
+          security:
+            - apiKey: []
+          responses:
+            '200':
+              description: OK
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      notifications:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            type:
+                              type: string
+                            recipient:
+                              type: string
+                            subject:
+                              type: string
+                            status:
+                              type: string
+                      total:
+                        type: integer
     components:
       securitySchemes:
         apiKey:
