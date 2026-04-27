@@ -1,0 +1,73 @@
+openapi: '3.0.0'
+info:
+  title: Customer API
+  version: 1.0.0
+  description: CRM customer data service providing customer profiles, tiers, and industry classification
+  contact:
+    name: connectx
+servers:
+  - url: https://gravitee-gw.au.connectxconsultingptyltd.cftenant.com
+    description: Production Gateway
+tags:
+  - name: customers
+    description: Customer management operations
+paths:
+  /customer-api:
+    get:
+      summary: List customers
+      operationId: listCustomers
+      tags: [customers]
+      security:
+        - apiKey: []
+      parameters:
+        - name: tier
+          in: query
+          schema:
+            type: string
+          description: Filter by customer tier
+        - name: industry
+          in: query
+          schema:
+            type: string
+          description: Filter by industry
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerList"
+        "401":
+          description: Unauthorized
+        "429":
+          description: Rate limited
+components:
+  schemas:
+    Customer:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        industry:
+          type: string
+        tier:
+          type: string
+      required: [id, name]
+    CustomerList:
+      type: object
+      properties:
+        customers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Customer"
+        total:
+          type: integer
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-Gravitee-Api-Key
+security:
+  - apiKey: []
