@@ -1,0 +1,107 @@
+openapi: "3.0.0"
+info:
+  title: Notification API
+  version: 1.0.0
+  description: Multi-channel notification service supporting email, webhook, and SMS delivery
+  contact:
+    name: connectx
+servers:
+  - url: https://gravitee-gw.au.connectxconsultingptyltd.cftenant.com
+    description: Production Gateway
+tags:
+  - name: notifications
+    description: Notification management operations
+paths:
+  /notification-api:
+    get:
+      summary: List notifications
+      operationId: listNotifications
+      tags: [notifications]
+      security:
+        - apiKey: []
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [email, sms, webhook]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, sent, failed]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationList"
+        "401":
+          description: Unauthorized
+    post:
+      summary: Send notification
+      operationId: sendNotification
+      tags: [notifications]
+      security:
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationRequest"
+      responses:
+        "202":
+          description: Accepted
+        "400":
+          description: Bad request
+        "401":
+          description: Unauthorized
+components:
+  schemas:
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [email, sms, webhook]
+        recipient:
+          type: string
+        subject:
+          type: string
+        status:
+          type: string
+          enum: [pending, sent, failed]
+      required: [id, type, recipient, status]
+    NotificationRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [email, sms, webhook]
+        recipient:
+          type: string
+        subject:
+          type: string
+        body:
+          type: string
+      required: [type, recipient, body]
+    NotificationList:
+      type: object
+      properties:
+        notifications:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notification"
+        total:
+          type: integer
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-Gravitee-Api-Key
+security:
+  - apiKey: []
