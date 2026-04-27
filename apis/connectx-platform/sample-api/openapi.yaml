@@ -1,0 +1,53 @@
+openapi: "3.0.0"
+info:
+  title: Health Check API
+  version: 1.0.0
+  description: Platform health and status API
+  contact:
+    name: connectx
+servers:
+  - url: https://gravitee-gw.au.connectxconsultingptyltd.cftenant.com
+    description: Production Gateway
+tags:
+  - name: health
+    description: Platform health operations
+paths:
+  /sample-api:
+    get:
+      summary: Get platform health
+      operationId: getHealth
+      tags: [health]
+      security:
+        - apiKey: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "401":
+          description: Unauthorized
+        "429":
+          description: Rate limited
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded, down]
+        version:
+          type: string
+        uptime:
+          type: integer
+          description: Uptime in seconds
+      required: [status]
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-Gravitee-Api-Key
+security:
+  - apiKey: []
